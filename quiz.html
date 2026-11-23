@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Викторина про Баку</title>
+<link rel="manifest" href="quiz-manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#08141f">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:wght@700&family=Manrope:wght@400;600&display=swap">
+<style>
+:root{--bg:#f3efe6;--ink:#10243a;--muted:#4b5d70;--card:#fffaf0;--line:#d9cfba;--flame:#e2561f;--sea:#0f5b78;--ok:#1d7a46;--bad:#b3261e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08141f;--ink:#eaf1f5;--muted:#9fb3c2;--card:#0f2233;--line:#1d3a52;--flame:#ff7a3d;--sea:#5cc0e0;--ok:#4cc27f;--bad:#ff8a80}}
+:root[data-theme="dark"]{--bg:#08141f;--ink:#eaf1f5;--muted:#9fb3c2;--card:#0f2233;--line:#1d3a52;--flame:#ff7a3d;--sea:#5cc0e0;--ok:#4cc27f;--bad:#ff8a80}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 Manrope,system-ui,sans-serif;min-height:100vh}
+main{max-width:560px;margin:0 auto;padding:32px 20px 48px}
+h1{font:700 clamp(36px,9vw,52px)/1.05 Cormorant,Georgia,serif;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 24px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:20px}
+.bar i{display:block;height:100%;width:0;background:var(--flame);transition:width .3s}
+.card{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--flame);border-radius:6px;padding:22px}
+.q{font:700 26px/1.2 Cormorant,Georgia,serif;margin:0 0 16px}
+.opts{display:grid;gap:10px}
+.opts button,.next{font:600 16px Manrope,sans-serif;color:var(--ink);background:transparent;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px;text-align:left;cursor:pointer}
+.opts button:focus-visible,.next:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
+.opts button.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,transparent)}
+.opts button.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 18%,transparent)}
+.msg{min-height:1.6em;margin:14px 0 0;color:var(--muted)}
+.next{margin-top:14px;background:var(--flame);border-color:var(--flame);color:#fff;text-align:center;width:100%}
+.score{font:700 64px/1 Cormorant,Georgia,serif;margin:0 0 8px}
+</style>
+</head>
+<body>
+<main>
+<h1>Викторина про Баку</h1>
+<p class="sub">Шесть вопросов о городе и стране. Проверь, что знаешь.</p>
+<div class="bar"><i id="bar"></i></div>
+<div class="card" id="card" aria-live="polite"></div>
+</main>
+<script>
+var Q=[
+{q:"Какой город — столица Азербайджана?",a:"Баку",w:["Гянджа","Сумгаит","Шеки"],e:"Баку — крупнейший город страны."},
+{q:"Какое море омывает Баку?",a:"Каспийское",w:["Чёрное","Средиземное","Азовское"],e:"Каспий называют самым большим озером на Земле."},
+{q:"Как переводится название Янардаг?",a:"Горящая гора",w:["Ветреная гора","Белая скала","Каменный город"],e:"Там из земли выходит газ, и пламя горит постоянно."},
+{q:"Как называются три небоскрёба-«пламя» в Баку?",a:"Flame Towers",w:["Sky Towers","Fire Gates","Caspian Spears"],e:"Их достроили в 2012 году."},
+{q:"Как называется старый город внутри крепостных стен?",a:"Ичери-шехер",w:["Старый Тбилиси","Шуша","Нахичевань"],e:"Он входит в список ЮНЕСКО."},
+{q:"Какая валюта в Азербайджане?",a:"Манат",w:["Тенге","Лари","Драм"],e:"Денежная единица — азербайджанский манат."}
+];
+var card=document.getElementById("card"),bar=document.getElementById("bar"),i=0,score=0;
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function shuffle(a){a=a.slice();for(var k=a.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=a[k];a[k]=a[j];a[j]=t}return a}
+function ask(){
+card.innerHTML="";bar.style.width=(i/Q.length*100)+"%";
+var d=Q[i],msg=el("p","msg"),opts=el("div","opts");
+card.appendChild(el("p","q",d.q));
+shuffle([d.a].concat(d.w)).forEach(function(o){
+var b=el("button","",o);
+b.onclick=function(){
+Array.prototype.forEach.call(opts.children,function(x){x.disabled=true;if(x.textContent===d.a)x.className="ok"});
+if(o===d.a){score++;msg.textContent="Верно! "+d.e}else{b.className="bad";msg.textContent="Не совсем. Правильно: "+d.a+". "+d.e}
+var n=el("button","next",i===Q.length-1?"Узнать результат":"Дальше");
+n.onclick=function(){i++;i<Q.length?ask():finish()};
+card.appendChild(n);n.focus();
+};
+opts.appendChild(b)});
+card.appendChild(opts);card.appendChild(msg);
+}
+function finish(){
+bar.style.width="100%";card.innerHTML="";
+card.appendChild(el("p","score",score+" из "+Q.length));
+var t=score===Q.length?"Отлично, ты настоящий знаток Баку!":score>=4?"Очень хорошо! Ещё немного, и будет идеально.":"Неплохое начало. Попробуй ещё раз.";
+card.appendChild(el("p","",t));
+var r=el("button","next","Сыграть ещё раз");
+r.onclick=function(){i=0;score=0;ask()};
+card.appendChild(r);
+}
+ask();
+if("serviceWorker" in navigator){try{navigator.serviceWorker.register("quiz-sw.js").catch(function(){})}catch(e){}}
+</script>
+</body>
+</html>
